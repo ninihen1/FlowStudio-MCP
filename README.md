@@ -66,40 +66,64 @@ Cached analytics and governance layer over your Power Platform tenant.
 
 ## Connect
 
-### Claude Code
+For full setup instructions, see the [Getting Started guide](https://learn.flowstudio.app/mcp-getting-started).
 
-```bash
-claude mcp add --transport http flowstudio https://mcp.flowstudio.app/mcp \
-  --header "x-api-key: YOUR_API_KEY"
-```
+### Claude Desktop
 
-### VS Code
-
-Add to your VS Code `settings.json`:
+File: `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ```json
 {
-  "mcp": {
-    "servers": {
-      "flowstudio": {
-        "type": "http",
-        "url": "https://mcp.flowstudio.app/mcp",
-        "headers": {
-          "x-api-key": "YOUR_API_KEY"
-        }
+  "mcpServers": {
+    "flowstudio": {
+      "command": "npx",
+      "args": [
+        "mcp-remote@latest",
+        "https://mcp.flowstudio.app/mcp",
+        "--header",
+        "x-api-key: YOUR_API_KEY",
+        "--header",
+        "User-Agent: FlowStudio-MCP/1.0"
+      ]
+    }
+  }
+}
+```
+
+Requires Node.js and the `mcp-remote` package as a bridge.
+
+### Claude Code
+
+Add to `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "flowstudio": {
+      "type": "http",
+      "url": "https://mcp.flowstudio.app/mcp",
+      "headers": {
+        "x-api-key": "${FLOWSTUDIO_API_KEY}"
       }
     }
   }
 }
 ```
 
-### Cursor
+Or via CLI:
 
-Add to `.cursor/mcp.json`:
+```bash
+claude mcp add --transport http flowstudio https://mcp.flowstudio.app/mcp \
+  --header "x-api-key: $FLOWSTUDIO_API_KEY"
+```
+
+### GitHub Copilot (VS Code)
+
+Add `.vscode/mcp.json` to your project (and add it to `.gitignore`):
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "flowstudio": {
       "url": "https://mcp.flowstudio.app/mcp",
       "headers": {
@@ -110,32 +134,61 @@ Add to `.cursor/mcp.json`:
 }
 ```
 
-### Windsurf
+### Copilot Studio
+
+See [Microsoft documentation](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-mcp-overview) for adding remote MCP servers to Copilot Studio agents.
+
+### JetBrains IDEs (IntelliJ, Rider, WebStorm)
+
+Via **Settings > Tools > AI Assistant > Model Context Protocol (MCP)**:
 
 ```json
 {
   "mcpServers": {
     "flowstudio": {
-      "serverUrl": "https://mcp.flowstudio.app/mcp",
-      "headers": {
-        "x-api-key": "YOUR_API_KEY"
-      }
+      "command": "npx",
+      "args": [
+        "mcp-remote@latest",
+        "https://mcp.flowstudio.app/mcp",
+        "--header",
+        "x-api-key: YOUR_API_KEY"
+      ]
     }
   }
 }
 ```
 
-### OpenAI Codex
+Requires Node.js and `mcp-remote` wrapper.
+
+### OpenAI Codex CLI
 
 In `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.flowstudio]
 url = "https://mcp.flowstudio.app/mcp"
+startup_timeout_sec = 10
+tool_timeout_sec = 120
 
-[mcp_servers.flowstudio.http_headers]
-x-api-key = "YOUR_API_KEY"
+[mcp_servers.flowstudio.env_http_headers]
+x-api-key = "FLOWSTUDIO_API_KEY"
 ```
+
+Do not use `bearer_token_env_var` — Flow Studio uses `x-api-key`, not `Authorization: Bearer`.
+
+### Any MCP-Compatible Agent
+
+**Endpoint:** `https://mcp.flowstudio.app/mcp`
+**Protocol:** JSON-RPC 2.0 over HTTP POST
+**Required headers:**
+
+```
+Content-Type: application/json
+x-api-key: YOUR_API_KEY
+User-Agent: FlowStudio-MCP/1.0
+```
+
+The auth header is `x-api-key`, not `Authorization: Bearer`.
 
 ---
 
